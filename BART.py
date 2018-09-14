@@ -19,12 +19,19 @@ def normalize_sheet_name(name):
     '''
     Given the name of an excel sheet, it returns the normalized name 
     '''
-    # name = name.lower()
-    if name == 'Weekday OD' or name == 'Wkdy Adj OD':
-        return 'unknown'
-    # if starts with w instead of 'weekday'
-    # for saturday and sunday have 'Sa' and 'Su'
-    # return 'w'
+    name = name.lower()
+    # if name == 'Weekday OD' or name == 'Wkdy Adj OD':
+    #     return 'unknown'
+
+    if name.startswith('w'):
+        return 'Weekday'
+    
+    elif name.startswith('sa'):
+        return 'Saturday'
+
+    elif name.startswith('su'): 
+        return 'Sunday'
+    
     else:
         return 'unknown' 
 
@@ -48,8 +55,8 @@ def normalize_month(month):
         'december': 12
     }
 
-
-    return month_dict[month.lower()]
+    m = month.lower()
+    return month_dict[m]
 
 def get_month_year_from_name(file):
     '''
@@ -60,7 +67,7 @@ def get_month_year_from_name(file):
 
     # 2008 and 2009: 
    
-    if file.startswith('R')
+    if file.startswith('R'):
         n = name.split('_') 
         fullname= n[1].split('.')
         month_year = fullname[0]
@@ -92,7 +99,7 @@ def load_xls(file):
         ## FIX THIS 
         for row in sheet.nrows():
             for col in sheet.nrows():
-                file_data.append((month, year, sheet_name, col, row, int(sheet[row][col])))
+                file_data.append((month, year, sheet_name, col, row, float(sheet[row][col])))
                 # int() of each cell?
 
     return file_data
@@ -110,7 +117,8 @@ def load_excel_files(tmpDir):
     all_data = []
     for root, dirs, files in os.walk(tmpDir):
         for file in files:
-            file_data = load_xls(root + '/' + file)
+            some_path = os.path.join(root, file)
+            file_data = load_xls(some_path)
             all_data += file_data
 
     return all_data
@@ -182,5 +190,6 @@ def ProcessBart(tmpDir, dataDir, SQLConn=None, schema='cls', table='bart'):
     load_csv(csv_file_name, schema, table, SQLConn)
 
 ## Testing
+
 LCLconnR = psycopg2.connect("dbname='donya' user='donya' host='localhost' password=''")
 ProcessBart('./tmp/', './data/', SQLConn=LCLconnR, schema='cls', table='bart')
