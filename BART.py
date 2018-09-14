@@ -19,8 +19,12 @@ def normalize_sheet_name(name):
     '''
     Given the name of an excel sheet, it returns the normalized name 
     '''
+    # name = name.lower()
     if name == 'Weekday OD' or name == 'Wkdy Adj OD':
         return 'unknown'
+    # if starts with w instead of 'weekday'
+    # for saturday and sunday have 'Sa' and 'Su'
+    # return 'w'
     else:
         return 'unknown' 
 
@@ -44,6 +48,7 @@ def normalize_month(month):
         'december': 12
     }
 
+
     return month_dict[month.lower()]
 
 def get_month_year_from_name(file):
@@ -52,9 +57,20 @@ def get_month_year_from_name(file):
     '''
     # fix for 2011 2008 --> make sure the names are consistent 
     # add conditions to this 
-    print(file)
-    file_parts = file.split()
-    return (normalize_month(file_parts[0]), file_parts[1])
+
+    # 2008 and 2009: 
+   
+    if file.startswith('R')
+        n = name.split('_') 
+        fullname= n[1].split('.')
+        month_year = fullname[0]
+        year = month_year[-4:]
+        month = month_year[:-4].strip()
+        return (month, year)
+    
+    else: 
+        file_parts = file.split()
+        return (normalize_month(file_parts[0]), file_parts[1])
 
 def load_xls(file): 
     '''
@@ -74,9 +90,10 @@ def load_xls(file):
             continue;
 
         ## FIX THIS 
-        for row in sheet.rows():
-            for col in sheet.cols():
-                file_data.append((month, year, sheet_name, col, row, sheet[row][col]))
+        for row in sheet.nrows():
+            for col in sheet.nrows():
+                file_data.append((month, year, sheet_name, col, row, int(sheet[row][col])))
+                # int() of each cell?
 
     return file_data
 
