@@ -97,8 +97,9 @@ def load_xls(file):
             continue;
 
         ## FIX THIS 
-        for row in sheet.nrows():
-            for col in sheet.nrows():
+        for row in range(1, sheet.nrows()):
+            for col in range(1, sheet.ncols()):
+                print(sheet.ncols)
                 file_data.append((month, year, sheet_name, col, row, float(sheet[row][col])))
                 # int() of each cell?
 
