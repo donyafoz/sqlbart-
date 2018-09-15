@@ -8,7 +8,6 @@ import re
 # issue 1: we should clean temp dir.
 # issue 2: we should unzip recursively.
 # issue 3: temp dir must be specified using absolute path.
-# issue 4: 2010-2016 data is missing from toLoad.csv.
 
 def unzip_all(current_directory, new_directory):
     '''
@@ -135,7 +134,7 @@ def load_excel_files(tmpDir):
     all_data = []
     for root, dirs, files in os.walk(tmpDir):
         for file in files:
-            if file.split('.')[-1] != 'xls':
+            if file.split('.')[-1] != 'xls' and file.split('.')[-1] != 'xlsx':
                 continue
 
             some_path = os.path.join(root, file)
