@@ -5,6 +5,11 @@ import glob
 import psycopg2
 import re
 
+# issue 1: we should clean temp dir.
+# issue 2: we should unzip recursively.
+# issue 3: temp dir must be specified using absolute path.
+# issue 4: 2010-2016 data is missing from toLoad.csv.
+
 def unzip_all(current_directory, new_directory):
     '''
     Goes through directories and subdirectories and unzips files.
