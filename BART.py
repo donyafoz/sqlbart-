@@ -94,16 +94,32 @@ def load_xls(file):
         sheet_name = normalize_sheet_name(sheet.name())
 
         if (sheet_name == 'unknown'):
-            continue;
+            continue 
 
-        ## FIX THIS 
-        for row in range(1, sheet.nrows()):
-            for col in range(1, sheet.ncols()):
-                print(sheet.ncols)
-                file_data.append((month, year, sheet_name, col, row, float(sheet[row][col])))
+        ## FIX THIS
+        col_number = sheet.ncols
+        row_number = sheet.nrows
+        for j in range(1, col_number):
+            if sheet.cell_value(1,j) == 'Exits':
+                col_number = j 
+                break
+            else: 
+                continue
+
+
+        for i in range(2, row_number-1):
+            exitstation = sheet.cell_value(i,0)
+            for j in range(1, col_number):
+                startstation = sheet.cell_value(i, col_number)
+                countppl = sheet.cell_value(i, j)
+            # for row in range(2, sheet.nrows):
+            #     print(sheet.ncols)
+            #     exitstation=sheet.cell_value(row,0)
+                file_data.append(
+                    (month, year, sheet_name, startstation, exitstation, float(countppl))
                 # int() of each cell?
 
-    return file_data
+        return file_data
 
 
 def load_excel_files(tmpDir):
