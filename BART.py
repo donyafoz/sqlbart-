@@ -36,7 +36,7 @@ def unzip_all(current_directory, new_directory):
 
 def normalize_sheet_name(name):
     '''
-    Given the name of an excel sheet, it returns the normalized name 
+    Given the name of an excel sheet, it returns the normalized name (as daytypes)
     '''
     name = name.lower()
 
@@ -92,7 +92,7 @@ def get_month_year_from_name(file):
     else: 
         regex = r"(\w+)\s?(\d{4})"
         file_parts = re.findall(regex, filename)[0]
-        return (normalize_month(file_parts[0]), file_parts[1])
+        return (normalize_month(file_parts[0]), file_parts[1])    # Mapping months to numbers, return the number and year 
 
 def load_xls(file): 
     """
@@ -103,7 +103,7 @@ def load_xls(file):
     sheets = content.sheets()
     month, year = get_month_year_from_name(file)
 
-    # (MONTH, YEAR, DAY_TYPE, START, TERM, RIDERS)
+    # Build a list of tuple (MONTH, YEAR, DAY_TYPE, START, TERM, RIDERS) for each data cell, in each sheet of the file
     file_data = []
     for sheet in sheets:
         sheet_name = normalize_sheet_name(sheet.name)
@@ -111,11 +111,13 @@ def load_xls(file):
         if (sheet_name == 'unknown'):
             continue 
 
-        ## FIX THIS
+        ## Count the total numbers of rows and columns in a sheet
         col_number = sheet.ncols
         row_number = sheet.nrows
-
-        for i in range(1, row_number):
+        
+        # Modify the range of the sheet to work on actual useful data
+        # By going through each cell in the first column and the title (second row) to find the ends
+        for i in range(1, row_number):                 
             if sheet.cell_value(i, 0) == 'Entries':
                 row_number = i 
                 break
@@ -124,10 +126,11 @@ def load_xls(file):
             if sheet.cell_value(1, j) == 'Exits':
                 col_number = j 
                 break
+        
 
-        for i in range(2, row_number - 1):
+        for i in range(2, row_number):                    
             exitstation = sheet.cell_value(i, 0)
-            for j in range(1, col_number - 1):
+            for j in range(1, col_number):                
                 startstation = sheet.cell_value(1, j)
                 countppl = sheet.cell_value(i, j)
                 # print(f"{startstation} - {exitstation} -> {countppl}")
