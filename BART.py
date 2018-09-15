@@ -1,13 +1,27 @@
 import zipfile
+import shutil
 import xlrd 
 import os
 import glob
 import psycopg2
 import re
 
-# issue 1: we should clean temp dir.
-# issue 2: we should unzip recursively.
-# issue 3: temp dir must be specified using absolute path.
+# issue 1: we should unzip recursively (not sure if needed).
+
+def empty_directory(folder):
+    '''
+    Empties a given directory.
+    '''
+    for the_file in os.listdir(folder):
+        file_path = os.path.join(folder, the_file)
+        try:
+            if os.path.isfile(file_path):
+                os.unlink(file_path)
+            elif os.path.isdir(file_path):
+                shutil.rmtree(file_path)
+        except Exception as e:
+            print(e)
+
 
 def unzip_all(current_directory, new_directory):
     '''
@@ -188,7 +202,7 @@ def load_csv(csv_file_name, schema, table, SQLConn):
     to Postgres.
     """
     SQLCursor = SQLConn.cursor()
-    SQLCursor.execute("""COPY %s.%s FROM '%s' CSV HEADER;""" % (schema, table, csv_file_name))
+    SQLCursor.execute("""COPY %s.%s FROM '%s' CSV HEADER;""" % (schema, table, os.path.abspath(csv_file_name)))
     SQLConn.commit()
 
     return
@@ -204,6 +218,7 @@ def ProcessBart(tmpDir, dataDir, SQLConn=None, schema='cls', table='bart'):
         print("Table already exists")
         return
 
+    empty_directory(tmpDir)
     unzip_all(dataDir, tmpDir)
     all_data = load_excel_files(tmpDir)
 
