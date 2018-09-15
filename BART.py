@@ -3,6 +3,7 @@ import xlrd
 import os
 import glob
 import psycopg2
+import re
 
 def unzip_all(current_directory, new_directory):
     '''
@@ -20,8 +21,6 @@ def normalize_sheet_name(name):
     Given the name of an excel sheet, it returns the normalized name 
     '''
     name = name.lower()
-    # if name == 'Weekday OD' or name == 'Wkdy Adj OD':
-    #     return 'unknown'
 
     if name.startswith('w'):
         return 'Weekday'
@@ -67,16 +66,18 @@ def get_month_year_from_name(file):
 
     # 2008 and 2009: 
    
-    if file.startswith('R'):
-        n = name.split('_') 
+    filename = file.split('/')[-1]
+    if filename.startswith('R'):
+        n = filename.split('_') 
         fullname= n[1].split('.')
         month_year = fullname[0]
         year = month_year[-4:]
         month = month_year[:-4].strip()
-        return (month, year)
+        return (normalize_month(month), year)
     
     else: 
-        file_parts = file.split()
+        regex = r"(\w+)\s?(\d{4})"
+        file_parts = re.findall(regex, filename)[0]
         return (normalize_month(file_parts[0]), file_parts[1])
 
 def load_xls(file): 
@@ -88,10 +89,10 @@ def load_xls(file):
     sheets = content.sheets()
     month, year = get_month_year_from_name(file)
 
-    # (START, TERM, EXITS, DAY_TYPE, MONTH, YEAR)
+    # (MONTH, YEAR, DAY_TYPE, START, TERM, RIDERS)
     file_data = []
     for sheet in sheets:
-        sheet_name = normalize_sheet_name(sheet.name())
+        sheet_name = normalize_sheet_name(sheet.name)
 
         if (sheet_name == 'unknown'):
             continue 
@@ -99,27 +100,26 @@ def load_xls(file):
         ## FIX THIS
         col_number = sheet.ncols
         row_number = sheet.nrows
+
+        for i in range(1, row_number):
+            if sheet.cell_value(i, 0) == 'Entries':
+                row_number = i 
+                break
+
         for j in range(1, col_number):
-            if sheet.cell_value(1,j) == 'Exits':
+            if sheet.cell_value(1, j) == 'Exits':
                 col_number = j 
                 break
-            else: 
-                continue
 
-
-        for i in range(2, row_number-1):
-            exitstation = sheet.cell_value(i,0)
-            for j in range(1, col_number):
-                startstation = sheet.cell_value(i, col_number)
+        for i in range(2, row_number - 1):
+            exitstation = sheet.cell_value(i, 0)
+            for j in range(1, col_number - 1):
+                startstation = sheet.cell_value(1, j)
                 countppl = sheet.cell_value(i, j)
-            # for row in range(2, sheet.nrows):
-            #     print(sheet.ncols)
-            #     exitstation=sheet.cell_value(row,0)
-                file_data.append(
-                    (month, year, sheet_name, startstation, exitstation, float(countppl))
-                # int() of each cell?
+                # print(f"{startstation} - {exitstation} -> {countppl}")
+                file_data.append((str(month), str(year), str(sheet_name), str(startstation)[:2], str(exitstation)[:2], str(countppl)))
 
-        return file_data
+    return file_data
 
 
 def load_excel_files(tmpDir):
@@ -129,12 +129,16 @@ def load_excel_files(tmpDir):
     '''
 
     # [
-    #   (START, TERM, EXITS, DAY_TYPE, MONTH, YEAR),
+    #   (MONTH, YEAR, DAY_TYPE, START, TERM, RIDERS)
     # ]
     all_data = []
     for root, dirs, files in os.walk(tmpDir):
         for file in files:
+            if file.split('.')[-1] != 'xls':
+                continue
+
             some_path = os.path.join(root, file)
+            print("Processing file " + some_path)
             file_data = load_xls(some_path)
             all_data += file_data
 
@@ -166,14 +170,15 @@ def save_data_as_csv(all_data, tmpDir):
     """
     Given data and a directory, it will save data as a CSV.
     """
-    csv_file_name = tmpDir + "/toLoad.csv"
+    csv_file_name = tmpDir + "toLoad.csv"
     with open(csv_file_name, 'w') as csv_file:
         # Header
-        csv_file.write("mon,yr,daytype,start,term,riders")
+        csv_file.write("mon,yr,daytype,start,term,riders\n")
 
-        for tuple in all_data:
-            csv_line = ",".join(list(tuple))
-            csv_file.write(csv_line)
+        for line_tuple in all_data:
+            # print(line_tuple)
+            csv_line = ",".join(list(line_tuple))
+            csv_file.write(csv_line + "\n")
 
     return csv_file_name
 
@@ -183,8 +188,7 @@ def load_csv(csv_file_name, schema, table, SQLConn):
     to Postgres.
     """
     SQLCursor = SQLConn.cursor()
-    SQLCursor.execute("""COPY %s.%s FROM '%s' CSV;"""
-          % (schema, table, csv_file_name))
+    SQLCursor.execute("""COPY %s.%s FROM '%s' CSV HEADER;""" % (schema, table, csv_file_name))
     SQLConn.commit()
 
     return
@@ -198,15 +202,15 @@ def ProcessBart(tmpDir, dataDir, SQLConn=None, schema='cls', table='bart'):
     """
     if (create_table(schema, table, SQLConn) == False):
         print("Table already exists")
-        # return
+        return
 
     unzip_all(dataDir, tmpDir)
     all_data = load_excel_files(tmpDir)
 
-    csv_file_name = save_data_as_csv(all_data)
+    csv_file_name = save_data_as_csv(all_data, tmpDir)
     load_csv(csv_file_name, schema, table, SQLConn)
 
 ## Testing
 
 LCLconnR = psycopg2.connect("dbname='donya' user='donya' host='localhost' password=''")
-ProcessBart('./tmp/', './data/', SQLConn=LCLconnR, schema='cls', table='bart')
+ProcessBart('/tmp/', './data/', SQLConn=LCLconnR, schema='cls', table='bart')
