@@ -58,13 +58,9 @@ def normalize_month(month):
     return month_dict[m]
 
 def get_month_year_from_name(file):
-    '''
+    """
     Given a file name, returns the month and year.
-    '''
-    # fix for 2011 2008 --> make sure the names are consistent 
-    # add conditions to this 
-
-    # 2008 and 2009: 
+    """
    
     filename = file.split('/')[-1]
     if filename.startswith('R'):
@@ -81,10 +77,10 @@ def get_month_year_from_name(file):
         return (normalize_month(file_parts[0]), file_parts[1])
 
 def load_xls(file): 
-    '''
+    """
     Given an excel file, loads it and returns a list containing START, TERM, 
     EXITS, DAY_TYPE, MONTH, YEAR.
-    '''    
+    """    
     content = xlrd.open_workbook(file)
     sheets = content.sheets()
     month, year = get_month_year_from_name(file)
@@ -123,10 +119,10 @@ def load_xls(file):
 
 
 def load_excel_files(tmpDir):
-    '''
+    """
     Given a direcory, it will load all excel files in the directory by walking 
     it and returns a list with the file paths.
-    '''
+    """
 
     # [
     #   (MONTH, YEAR, DAY_TYPE, START, TERM, RIDERS)
