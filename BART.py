@@ -151,7 +151,8 @@ def load_excel_files(tmpDir):
     all_data = []
     for root, dirs, files in os.walk(tmpDir):
         for file in files:
-            if file.split('.')[-1] != 'xls' and file.split('.')[-1] != 'xlsx':
+            f = file.split('.')[-1]
+            if f != 'xls' and f != 'xlsx':
                 continue
 
             some_path = os.path.join(root, file)
