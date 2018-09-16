@@ -6,11 +6,10 @@ import glob
 import psycopg2
 import re
 
-# issue 1: we should unzip recursively (not sure if needed).
 
 def empty_directory(folder):
     '''
-    Empties a given directory.
+    Empties a given directory. Does nothing if directory is already empty.
     '''
     for the_file in os.listdir(folder):
         file_path = os.path.join(folder, the_file)
@@ -206,6 +205,7 @@ def load_csv(csv_file_name, schema, table, SQLConn):
     to Postgres.
     """
     SQLCursor = SQLConn.cursor()
+    # SQL command takes absolute path of csv file.
     SQLCursor.execute("""COPY %s.%s FROM '%s' CSV HEADER;""" % (schema, table, os.path.abspath(csv_file_name)))
     SQLConn.commit()
 
@@ -229,7 +229,7 @@ def ProcessBart(tmpDir, dataDir, SQLConn=None, schema='cls', table='bart'):
     csv_file_name = save_data_as_csv(all_data, tmpDir)
     load_csv(csv_file_name, schema, table, SQLConn)
 
-## Testing
+## Testing we don't need to include these two line of code in our submission, do we?
 
 LCLconnR = psycopg2.connect("dbname='donya' user='donya' host='localhost' password=''")
 ProcessBart('/tmp/', './data/', SQLConn=LCLconnR, schema='cls', table='bart')
