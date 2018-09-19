@@ -1,3 +1,9 @@
+# Group members:
+# Donya Fozoonmayeh 
+# Xinke Sun
+# Wendy Xiao
+# Marwa Oussaifi
+
 import zipfile
 import shutil
 import xlrd 
@@ -229,7 +235,6 @@ def ProcessBart(tmpDir, dataDir, SQLConn=None, schema='cls', table='bart'):
     csv_file_name = save_data_as_csv(all_data, tmpDir)
     load_csv(csv_file_name, schema, table, SQLConn)
 
-## Testing we don't need to include these two line of code in our submission, do we?
 
-LCLconnR = psycopg2.connect("dbname='donya' user='donya' host='localhost' password=''")
-ProcessBart('/tmp/', './data/', SQLConn=LCLconnR, schema='cls', table='bart')
+# LCLconnR = psycopg2.connect("dbname='donya' user='donya' host='localhost' password=''")
+# ProcessBart('/tmp/', './data/', SQLConn=LCLconnR, schema='cls', table='bart')
